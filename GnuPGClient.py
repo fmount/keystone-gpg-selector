@@ -78,7 +78,7 @@ class GnuPGClient():
 
 	def decrypt(self, fname_input, key, passph):
 		s = ""
-		with open(fname_input, "rb") as f:
+		with open(fname_input, "r") as f:
 			for line in f.readlines():
 				s += line
 			dec_data = self.gpg.decrypt(str(s), passphrase=passph)

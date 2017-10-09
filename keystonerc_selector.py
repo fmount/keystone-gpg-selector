@@ -1,4 +1,26 @@
-#! /usr/bin/python
+#! /usr/bin/env python
+
+#######################################################################
+#
+#	 Licensed under the Apache License, Version 2.0 (the "License");
+#	 you may not use this file except in compliance with the License.
+#	 You may obtain a copy of the License at
+#
+#		 http://www.apache.org/licenses/LICENSE-2.0
+#
+#	 Unless required by applicable law or agreed to in writing, software
+#	 distributed under the License is distributed on an "AS IS" BASIS,
+#	 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#	 See the License for the specific language governing permissions and
+#	 limitations under the License.
+#
+#	 author: fmount <fmount9@autistici.org>
+#	 version: 0.1alpha
+#	 company: --
+#
+########################################################################
+
+
 
 from __future__ import print_function
 from prettytable import PrettyTable
@@ -32,14 +54,7 @@ PREFIX = "keystonerc_"
 
 def init_ring():
 	'''
-	Three Rings for the Elven-kings under the sky,
-	Seven for the Dwarf-lords in their halls of stone,
-	Nine for Mortal Men doomed to die,
-	One for the Dark Lord on his dark throne
-	In the Land of Mordor where the Shadows lie.
-	One Ring to rule them all, One Ring to find them,
-	One Ring to bring them all and in the darkness bind them
-	In the Land of Mordor where the Shadows lie.
+	Init the ring
 	'''
 
 	print("INIT RING")
@@ -47,9 +62,7 @@ def init_ring():
 	for filename in os.listdir(KEYSTONERC_HOME):
 
 		krc_plain = load_element(KEYSTONERC_HOME + "/" + filename)
-
 		RING.append(filename, krc_plain)
-
 
 def read_credentials(*args):
 	'''
@@ -72,14 +85,13 @@ def save_credentials(dic, fname, KEYSTONERC_HOME):
 	for key, value in dic.iteritems():
 		message += key + "=" + value + "\n"
 	
-	
+	print(message)
 	RING.gpg.encrypt(message, finger, KEYSTONERC_HOME + "/" + PREFIX + fname + EXT)
 
 	
 def load_element(fname):
 	
 	fingerprint = RING.gpg.select_key()
-
 	plain_msg = RING.gpg.decrypt(fname, fingerprint, RING.passph)
 	
 	return str(plain_msg)
@@ -133,6 +145,7 @@ def cli():
 
 	if(keystonerc is not None):
 		with open(keystonerc, "r") as krc:
+			print(krc.readlines())
 			for item in list(krc.readlines()):
 				r1 = item.split("=")
 				if(re.search(r'USERNAME', r1[0])):
@@ -158,7 +171,7 @@ def cli():
 	elif(user is None and tenant is None and passphrase is None and endpoint is None):
 		init_ring()
 		extracted = RING.select_from_ring()
-		#print("Switch user to: " + str(extracted))
+		print("Switch user to: " + str(extracted))
 	
 	elif(user is None or tenant is None or passphrase is None or endpoint is None):
 		print("ERROR -1")
