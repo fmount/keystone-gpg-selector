@@ -1,22 +1,22 @@
-#! /usr/bin/env python
-
+#! /usr/bin/python3
+# -*- coding: utf-8 -*-
 #######################################################################
 #
-#	 Licensed under the Apache License, Version 2.0 (the "License");
-#	 you may not use this file except in compliance with the License.
-#	 You may obtain a copy of the License at
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
 #
-#		 http://www.apache.org/licenses/LICENSE-2.0
+#        http://www.apache.org/licenses/LICENSE-2.0
 #
-#	 Unless required by applicable law or agreed to in writing, software
-#	 distributed under the License is distributed on an "AS IS" BASIS,
-#	 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#	 See the License for the specific language governing permissions and
-#	 limitations under the License.
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
 #
-#	 author: fmount <fmount9@autistici.org>
-#	 version: 0.1alpha
-#	 company: --
+#    author: fmount <fmount9@autistici.org>
+#    version: 0.1alpha
+#    company: --
 #
 ########################################################################
 
@@ -27,78 +27,79 @@ from ConsoleUtils import ANSIColors
 import getpass
 import json
 import re
+import six
+
 
 class Ring(object):
 
-	def __init__(self, GNUPG_HOME):
-		self.ring = {}
+    def __init__(self, GNUPG_HOME):
+        self.ring = {}
 
-		self.gpg = GnuPGClient(homedir=GNUPG_HOME, kr="pubring.gpg", sr="secring.gpg")
-		
-		self.pubkeys = self.gpg.load_skey()
+        self.gpg = GnuPGClient(homedir=GNUPG_HOME, kr="pubring.gpg", sr="secring.gpg")
+        
+        self.pubkeys = self.gpg.load_skey()
 
-		ANSIColors().print_with_color("Unlock your keyring", "NORMAL", "RED")
+        ANSIColors().print_with_color("Unlock your keyring", "NORMAL", "RED")
 
-		self.passph = getpass.getpass()
-
-
-	def __getattr__(self, attr):
-		return attr
+        self.passph = getpass.getpass()
 
 
-	def __setattr__(self, key, value):
-		self.__dict__[key] = value
-
-	
-	def __repr__(self):
-		pass
+    def __getattr__(self, attr):
+        return attr
 
 
-	def append(self, key, value):
-		self.ring[key] = value
-	
+    def __setattr__(self, key, value):
+        self.__dict__[key] = value
 
-	def select_from_ring(self):
-		
-		count = 0
-		
-		extracted = {}
-		ch = {}
-
-		for k, v in self.ring.iteritems():
-			# Print the menu
-			print(str(count) + ") " + str(k).split(".")[0])
-			
-			ch[count] = str(k)
-
-			count += 1
-		choice = input("Select your keystonerc from the Ring\n")
-		
-		# MANIPULATE THE RESULTING STRING
-		#print(str(ch[choice]))
-
-		#for item in self.ring[ch[choice]].split("\n"):
-		for item in self.ring[ch[choice]].split("\n"):
-			r1 = item.split("=")
-			if(re.search(r'USERNAME', r1[0])):
-				extracted['OS_USERNAME'] = r1[1]
-			elif(re.search(r'TENANT', r1[0])):
-				extracted['OS_TENANT_NAME'] = r1[1]
-			elif(re.search(r'PASS', r1[0])):
-				extracted['OS_PASSWORD'] = r1[1]
-			elif(re.search(r'URL', r1[0])):
-				extracted['OS_AUTH_URL'] = r1[1]
-			else:
-				print("No Match")
-
-		return extracted
+    
+    def __repr__(self):
+        pass
 
 
-	def show_ring_content(self):
-		
-		table = PrettyTable(['Username _ VPDC', 'Export Env Values'])
-		
-		for k, v in json.loads(json.dumps(self.ring)).items():
-			table.add_row([k, v])
-		
-		print(table)
+    def append(self, key, value):
+        self.ring[key] = value
+    
+
+    def select_from_ring(self):
+        
+        count = 0
+        
+        extracted = {}
+        
+        ch = {}
+        
+        for k, v in six.iteritems(self.ring):
+            
+            # Print the menu
+            print(str(count) + ") " + str(k).split(".")[0])
+            
+            ch[count] = str(k)
+
+            count += 1
+        
+        choice = input("Select your keystonerc from the Ring\n")
+        
+        
+        for item in self.ring[ch[int(choice)]].split("\n"):
+            r1 = item.split("=")
+            if(re.search(r'USERNAME', r1[0])):
+                extracted['OS_USERNAME'] = r1[1]
+            elif(re.search(r'TENANT', r1[0])):
+                extracted['OS_TENANT_NAME'] = r1[1]
+            elif(re.search(r'PASS', r1[0])):
+                extracted['OS_PASSWORD'] = r1[1]
+            elif(re.search(r'URL', r1[0])):
+                extracted['OS_AUTH_URL'] = r1[1]
+            #else:
+            #    print("No Match")
+
+        return extracted
+
+
+    def show_ring_content(self):
+
+        table = PrettyTable(['Username _ VPDC', 'Export Env Values'])
+
+        for k, v in json.loads(json.dumps(self.ring)).items():
+            table.add_row([k, v])
+        print(table)
