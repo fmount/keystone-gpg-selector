@@ -1,25 +1,24 @@
-#! /usr/bin/python3
-# -*- coding: utf-8 -*-
-#######################################################################
+#! /usr/bin/env python
+
+############################################################################
 #
-#    Licensed under the Apache License, Version 2.0 (the "License");
-#    you may not use this file except in compliance with the License.
-#    You may obtain a copy of the License at
+#       Licensed under the MIT License (the "License"); you may not use this file
+#       except in compliance with the License.  You may obtain a copy of the License
+#       in the LICENSE file or at
 #
-#        http://www.apache.org/licenses/LICENSE-2.0
+#           https://opensource.org/licenses/MIT
 #
-#    Unless required by applicable law or agreed to in writing, software
-#    distributed under the License is distributed on an "AS IS" BASIS,
-#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-#    See the License for the specific language governing permissions and
-#    limitations under the License.
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+#   WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 #
 #    author: fmount <fmount9@autistici.org>
-#    version: 0.1alpha
+#    version: 0.1
 #    company: --
 #
-########################################################################
-
+#############################################################################
 
 
 from __future__ import print_function
@@ -36,6 +35,7 @@ import re
 import six
 from pprint import pprint
 import logging
+import config
 
 
 '''
@@ -47,19 +47,70 @@ import logging
 logging.basicConfig(level=logging.INFO)
 LOG = logging.getLogger(__name__)
 
-KEYSTONERC_HOME = "~/.keystonerc_ring/"
-GNUPG_HOME = "~/.gnupg/"
-
 EXT = ".gpg"
 PREFIX = "keystonerc_"
 
 
+def get_config():
+    p = config.parameters_json_file_source
+    
+    cf = []
+
+    for conf in p.keys():
+        cf.append(os.path.relpath(p.get("conf")))
+
+    cfiles = list(filter(lambda x: os.path.exists(x), cf))
+
+    if(len(cfiles) == 0):
+        raise Exception("Json config not found")
+    
+    gpg_global_conf = cfiles[0]
+
+    try:
+
+        with open(gpg_global_conf, 'r') as f:
+            gpg_env = json.load(f)
+            return gpg_env
+
+    except Exception as js_exc:
+        raise js_exc
+
+    return None
+
+
+
+def parse_json_config(jsonconf):
+    
+    GNUPG_HOME = None
+    GNUPG_BIN = None
+    PUBRING = None
+    SECRING = None
+    KEYSTONERC_HOME = None
+
+    for key, value in jsonconf.get("globals").items():
+        if(key == "gnupghome"):
+            GNUPG_HOME = value
+        elif(key == "gnupgbin"):
+            GNUPG_BIN = value
+        elif(key == "pubring"):
+            PUBRING = value
+        elif(key == "secring"):
+            SECRING = value
+        elif(key == "keystonerchome"):
+            KEYSTONERC_HOME = value
+    
+    if(GNUPG_HOME is not None and GNUPG_BIN is not None and PUBRING is not None and SECRING is not None and KEYSTONERC_HOME is not None):
+        
+        return (GNUPG_HOME, GNUPG_BIN, PUBRING, SECRING, KEYSTONERC_HOME)
+    else:
+        raise Exception("MISSING PARAMETERS!")
+
+
 #TODO: Make it more fast
-def init_ring():
+def init_ring(KEYSTONERC_HOME):
     '''
     Init the ring
     '''
-    global KEYSTONERC_HOME
     if KEYSTONERC_HOME.startswith('~'):
         KEYSTONERC_HOME = os.path.expanduser(KEYSTONERC_HOME)
 
@@ -114,7 +165,7 @@ def set_bash_prompt(dic):
     subprocess.call(["bash", "-noprofile", "--norc", "-O", "checkwinsize", "-O", "extglob"])
 
 
-def cli():
+def cli(KEYSTONERC_HOME):
 
     parser = optparse.OptionParser('\nkeystonerc_selector \nusage %prog -u USER -p PASSPHRASE -t TENANT -e ENDPOINT')
     
@@ -170,7 +221,7 @@ def cli():
 
     # Scenario 0 (Run command without parameters)
     elif(user is None and tenant is None and passphrase is None and endpoint is None):
-        init_ring()
+        init_ring(KEYSTONERC_HOME)
         extracted = RING.select_from_ring()
         print("Switch user to: " + str(extracted))
     
@@ -195,5 +246,12 @@ def cli():
 
 
 if __name__ == '__main__':
-    RING = Ring(GNUPG_HOME)
-    cli()
+    
+    gpg_conf = get_config()
+    
+    if(gpg_conf is not None):
+        (GNUPG_HOME, GNUPG_BIN, PUBRING, SECRING, KEYSTONERC_HOME) = parse_json_config(gpg_conf)
+        
+        RING = Ring(GNUPG_HOME, GNUPG_BIN, PUBRING, SECRING)
+        #RING = Ring(GNUPG_HOME, GNUPG_BIN)
+        cli(KEYSTONERC_HOME)

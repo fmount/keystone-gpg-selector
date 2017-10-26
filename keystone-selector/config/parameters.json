@@ -1,0 +1,9 @@
+{
+	"globals": {
+        "gnupghome": "~/.gnupg",
+        "gnupgbin": "/usr/bin/gpg",
+        "pubring": "pubring.gpg",
+        "secring": "secring.gpg",
+        "keystonerchome": "~/.keystonerc_ring"
+	}
+}
