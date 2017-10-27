@@ -44,3 +44,12 @@ class KeyError(Exception):
     Raised when the ring key is wrong
     '''
     pass
+
+
+class MissingParameters(Exception):
+    '''
+    Raised when there are missing params in
+    the config provided and it cannot be
+    validated
+    '''
+    pass

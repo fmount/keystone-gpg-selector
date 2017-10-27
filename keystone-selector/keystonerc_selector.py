@@ -26,6 +26,7 @@ from prettytable import PrettyTable
 from collections import defaultdict
 import optparse
 from GnuPGClient import GnuPGClient
+from decorators import check_mandatory_params
 from Ring import Ring
 import os
 import sys
@@ -78,7 +79,7 @@ def get_config():
     return None
 
 
-
+@check_mandatory_params
 def parse_json_config(jsonconf):
     
     GNUPG_HOME = None
@@ -98,12 +99,8 @@ def parse_json_config(jsonconf):
             SECRING = value
         elif(key == "keystonerchome"):
             KEYSTONERC_HOME = value
-    
-    if(GNUPG_HOME is not None and GNUPG_BIN is not None and PUBRING is not None and SECRING is not None and KEYSTONERC_HOME is not None):
-        
-        return (GNUPG_HOME, GNUPG_BIN, PUBRING, SECRING, KEYSTONERC_HOME)
-    else:
-        raise Exception("MISSING PARAMETERS!")
+
+    return (GNUPG_HOME, GNUPG_BIN, PUBRING, SECRING, KEYSTONERC_HOME)
 
 
 #TODO: Make it more fast
